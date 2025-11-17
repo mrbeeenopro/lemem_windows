@@ -1,5 +1,7 @@
 # Windows 11 VM Egg for Pterodactyl
 
+![Preview](https://cdn.bosd.io.vn/windows11.png)
+
 Introduces a Windows 11 virtualization Egg designed for use on the Pterodactyl panel. It allows you to run a lightweight Windows 11 virtual machine inside a container using QEMU/KVM. The Egg supports user‑configured RAM through the `VM_MEMORY` variable.
 
 ---
@@ -8,11 +10,17 @@ Introduces a Windows 11 virtualization Egg designed for use on the Pterodactyl p
 
 This Egg provides a fully automated setup for launching a Windows 11 environment inside Pterodactyl. It is optimized for:
 
+![Preview]([https://cdn.bosd.io.vn/windows11.png](https://pub-cc2caec4959546c9b98850c80420b764.r2.dev/panel.png))
+
 * Virtualized desktop usage
 * Background Windows tasks
 * Automation or tooling that requires Windows compatibility
 * Labs, demos, or testing
-
+* ✅ support kvm
+* ✅ live web vnc srceen
+* ✅ multi core support
+* ⚠️ support rdp(with rustdesk or tunnel app)
+* ❌ shared folder with host
 The Egg uses QEMU/KVM to emulate hardware and boots from a Windows 11 disk image supplied by the user.
 
 ---
