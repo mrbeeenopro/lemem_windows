@@ -21,7 +21,6 @@ This Egg provides a fully automated setup for launching a Windows 11 environment
 * ✅ multi core support
 * ⚠️ support rdp(with rustdesk or tunnel app)
 * ❌ shared folder with host
-The Egg uses QEMU/KVM to emulate hardware and boots from a Windows 11 disk image supplied by the user.
 
 ---
 
