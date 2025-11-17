@@ -32,7 +32,7 @@ This Egg provides a fully automated setup for launching a Windows 11 environment
  * 200% cpu
  * 20gb disk
 
- **recommended specs**
+ **Recommended specs**
 
  * 10gb of memory
  * 600% cpu
@@ -40,7 +40,7 @@ This Egg provides a fully automated setup for launching a Windows 11 environment
 
 ---
 
-## ⚙️ Environment Variable: `VM_MEMORY`
+## ⚙️ Environment:
 
 `VM_MEMORY` defines the amount of RAM (in MB) allocated to the virtual machine.
 
