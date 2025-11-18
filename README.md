@@ -19,7 +19,7 @@ This Egg provides a fully automated setup for launching a Windows 11 environment
 * ✅ support kvm
 * ✅ live web vnc srceen
 * ✅ multi core support
-* ⚠️ support rdp(with rustdesk or tunnel app)
+* ✅ support rdp
 * ❌ shared folder with host
 
 ---
