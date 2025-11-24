@@ -1,23 +1,6 @@
 #!/bin/bash
 # Copyright(C) 2025 Lemem Developers. All rights reserved.
 
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-#
-#The above copyright notice and this permission notice shall be included in all
-#copies or substantial portions of the Software.
-#
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#SOFTWARE.
 # >> User-Configuration  <<
 user_passwd="$(echo "$HOSTNAME" | sed 's+-.*++g')"
 retailer_mode=false
@@ -64,9 +47,11 @@ bootstrap_system() {
   cp /etc/group "$install_path"/etc/group -v
   cp /etc/nsswitch.conf "$install_path"/etc/nsswitch.conf -v
   mkdir -p "$install_path/home/container"
-
+  mkdir -p "$install_path/shared/windows"
+  
+  d.stat "Downloading will took 5-15 minutes.."
 ./dockerd -r . -b /dev -b /sys -b /proc -b /tmp \
-    --kill-on-exit -w /home/container /bin/sh -c "apk update && apk add bash xorg-server git nano vim tmate btop htop fastfetch neofetch python3 py3-pip py3-numpy openssl \
+    --kill-on-exit -w /home/container /bin/sh -c "apk update && apk add bash xorg-server git nano vim htop python3 virtiofsd py3-pip py3-numpy openssl \
       xinit xvfb fakeroot dropbear qemu qemu-img qemu-system-x86_64 \
     virtualgl mesa-dri-gallium \
     --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing \
@@ -81,7 +66,7 @@ bootstrap_system() {
      wget https://cdn.bosd.io.vn/windows11.qcow2 && mv windows11.qcow2 /"
 
 cat >"$install_path/home/container/.bashrc" <<EOF
-    echo " 🛑 wm cannot continue. Please contact the server administrator "
+    echo " ðŸ›‘ wm shutdown or exiting error try exit or restart "
 
 EOF
 
@@ -105,8 +90,8 @@ run_system() {
 
   # start qemu vm
   d.stat "starting windows 11..."
-
-  $DOCKER_RUN "qemu-system-x86_64 -m "$VM_MEMORY" -smp $(nproc --all) -nic user -drive file=windows11.qcow2 -display vnc=127.0.0.1:1"                         
+  d.stat "password: admin"
+  $DOCKER_RUN "qemu-system-x86_64 -m "$VM_MEMORY" -smp $(nproc --all) -nic user,hostfwd=tcp::"$RDP_PORT"-:3389 -drive file=windows11.qcow2 -display vnc=127.0.0.1:1"                         
   
   $DOCKER_RUN bash
 }
