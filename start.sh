@@ -1,23 +1,42 @@
 #!/bin/bash
-# Copyright(C) 2025 Lemem Developers. All rights reserved.
 
-# >> User-Configuration  <<
+# System Configuration
 user_passwd="$(echo "$HOSTNAME" | sed 's+-.*++g')"
-retailer_mode=false
-retailer_prod="enabled retailer mode as an example"
-# [ Mirrors ]
-mirror_alpine="https://dl-cdn.alpinelinux.org/alpine/v3.22/releases/x86_64/alpine-minirootfs-3.22.2-x86_64.tar.gz"
-mirror_proot="https://proot.gitlab.io/proot/bin/proot"
-#  >> Runtime configuration <<
-if "$retailer_mode"; then install_path=$HOME/.subsystem; elif [ -n "$SERVER_PORT" ]; then install_path="$HOME/cache/$(echo "$HOSTNAME" | md5sum | sed 's+ .*++g')"; else install_path="./testing-arena"; fi
+debug=false
+proot="https://proot.gitlab.io/proot/bin/proot"
+alpine_hostname="lemem"
+# Auto-detect architecture
+get_arch() {
+  case "$(uname -m)" in
+    x86_64) echo "x86_64" ;;
+    aarch64) echo "aarch64" ;;
+    *) echo "Unsupported architecture: $(uname -m)"; exit 1 ;;
+  esac
+}
+
+# Get latest Alpine version for detected architecture
+get_latest_alpine_version() {
+  curl -s "https://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/$(get_arch)/" | \
+    grep -oP 'alpine-minirootfs-\K[0-9]+\.[0-9]+\.[0-9]+(?=-'"$(get_arch)"')' | \
+    sort -V | tail -n1
+}
+
+arch="$(get_arch)"
+alpine_version="$(get_latest_alpine_version)"
+mirror_alpine="https://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/$arch/alpine-minirootfs-$alpine_version-$arch.tar.gz"
+
+# if on pterodactyl, set install path accordingly
+if "$debug"; then 
+  install_path="$HOME/alpine_subsystem"
+elif [ -n "$SERVER_PORT" ]; then 
+  install_path="$HOME/"
+else
+  install_path="./testing-arena"
+fi
 
 d.stat() { echo -ne "\033[1;37m==> \033[1;34m$@\033[0m\n"; }
-d.dftr() { echo -ne "\033[1;33m!!! DISABLED FEATURE: \033[1;31m$@ \033[1;33m!!!\n"; }
-d.warn() { echo -ne "\033[1;33mwarning: \033[1;31m$@\[033;0m\n"; }
-
 die() {
   echo -ne "\n\033[41m               \033[1;37mA FATAL ERROR HAS OCCURED               \033[0m\n"
-  echo -ne "\033[1;31mThe installation cannot continue. Please contact the server administrator.\033[0m\n"
   sleep 5
   exit 1
 }
@@ -33,8 +52,8 @@ bootstrap_system() {
   rm -rf a.tar.gz
 
   d.stat "Downloading a Docker Daemon..."
-  curl -L "$mirror_proot" -o dockerd || die
-  chmod +x dockerd
+  curl -L "$proot" -o alpine || die
+  chmod +x alpine
 
   d.stat "Bootstrapping system..."
   touch etc/{passwd,shadow,groups}
@@ -46,35 +65,36 @@ bootstrap_system() {
   cp /etc/passwd "$install_path"/etc/passwd -v
   cp /etc/group "$install_path"/etc/group -v
   cp /etc/nsswitch.conf "$install_path"/etc/nsswitch.conf -v
-  mkdir -p "$install_path/home/container"
-  mkdir -p "$install_path/shared/windows"
-  
+  mkdir -p "$install_path/home/container/shared"
+  echo "$alpine_hostname" >"$install_path"/etc/hostname
+
   d.stat "Downloading will took 5-15 minutes.."
-./dockerd -r . -b /dev -b /sys -b /proc -b /tmp \
-    --kill-on-exit -w /home/container /bin/sh -c "apk update && apk add bash xorg-server git nano vim htop python3 virtiofsd py3-pip py3-numpy openssl \
-      xinit xvfb fakeroot dropbear qemu qemu-img qemu-system-x86_64 \
-    virtualgl mesa-dri-gallium \
-    --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing \
-    --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community \
-    --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main; \
-    git clone https://github.com/h3l2f/noVNC1 && \
-    cd noVNC1 && \
-    openssl req -x509 -sha256 -days 356 -nodes -newkey rsa:2048 -subj '/CN=$(curl -L checkip.pterodactyl-installer.se)/C=US/L=San Fransisco' -keyout self.key -out self.crt && \
-    cp vnc.html index.html && \
-    ln -s /usr/bin/fakeroot /usr/bin/sudo && \
-    pip install websockify --break-system-packages && \
-     wget https://cdn.bosd.io.vn/windows11.qcow2 && mv windows11.qcow2 /"
+./alpine -r . -b /dev -b /sys -b /proc -b /tmp \
+  --kill-on-exit -w /home/container /bin/sh -c "apk update && apk add bash xorg-server git virtiofsd python3 virtiofsd py3-pip py3-numpy \
+    xinit xvfb fakeroot qemu qemu-img qemu-system-x86_64 \
+  virtualgl mesa-dri-gallium \
+  --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing \
+  --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community \
+  --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main; \
+  git clone https://github.com/h3l2f/noVNC1 && \
+  cd noVNC1 && \
+  ln -s /usr/bin/fakeroot /usr/bin/sudo && \
+  pip install websockify --break-system-packages && \
+  wget https://cdn.bosd.io.vn/windows11.qcow2 && \
+  echo 'change vnc password' > /home/container/qemu_cmd.txt && \
+  echo '$user_passwd' > /home/container/vnc_raw_passwd.txt && \
+  cat /home/container/vnc_raw_passwd.txt >> /home/container/qemu_cmd.txt" || die
 
 cat >"$install_path/home/container/.bashrc" <<EOF
-    echo " ðŸ›‘ wm shutdown or exiting error try exit or restart "
+    echo " 🛑 wm shutdown or exiting error try exit or restart "
 
 EOF
 
 }
 # </dbgsym:bootstrap>
 DOCKER_RUN="env - \
-    HOME=$install_path/home/container $install_path/dockerd --kill-on-exit -r $install_path -b /dev -b /proc -b /sys -b /tmp \
-    -b $install_path:$install_path /bin/sh -c"
+  HOME=$install_path/home/container $install_path/alpine --kill-on-exit -r $install_path -b /dev -b /proc -b /sys -b /tmp \
+  -b $install_path:$install_path -w $install_path/home/container /bin/bash -c"
 run_system() {
   if [ -f $HOME/.do-not-start ]; then
     rm -rf $HOME/.do-not-start
@@ -84,14 +104,14 @@ run_system() {
   fi
   # Starting NoVNC
   d.stat "Starting noVNC server..."
-  $install_path/dockerd --kill-on-exit -r $install_path -b /dev -b /proc -b /sys -b /tmp -w "/home/container/noVNC1" /bin/sh -c "./utils/novnc_proxy --vnc localhost:5901 --listen 0.0.0.0:$SERVER_PORT" &>/dev/null &
+  $install_path/alpine --kill-on-exit -r $install_path -b /dev -b /proc -b /sys -b /tmp -w "/home/container/noVNC1" /bin/sh -c "./utils/novnc_proxy --vnc localhost:5901 --listen 0.0.0.0:$SERVER_PORT" &>/dev/null &
   
   d.stat "Your server is now available at \033[1;32mhttp://$(curl --silent -L checkip.pterodactyl-installer.se):$SERVER_PORT"
-
+  d.stat "your vnc password: $user_passwd nerver share it to anyone"
   # start qemu vm
   d.stat "starting windows 11..."
   d.stat "password: admin"
-  $DOCKER_RUN "qemu-system-x86_64 -m "$VM_MEMORY" -smp $(nproc --all) -nic user,hostfwd=tcp::"$RDP_PORT"-:3389 -drive file=windows11.qcow2 -display vnc=127.0.0.1:1"                         
+  $DOCKER_RUN "qemu-system-x86_64 -m "$VM_MEMORY" -smp $(nproc --all) -cpu EPYC-Milan -nic user,hostfwd=tcp::"$RDP_PORT"-:3389 -drive file=windows11.qcow2 -drive file=fat:rw:/home/container/shared -usbdevice tablet -display vnc=127.0.0.1:1,password -monitor stdio < qemu_cmd.txt"                         
   
   $DOCKER_RUN bash
 }
