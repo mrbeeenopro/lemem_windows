@@ -16,11 +16,11 @@ This Egg provides a fully automated setup for launching a Windows 11 environment
 * Background Windows tasks
 * Automation or tooling that requires Windows compatibility
 * Labs, demos, or testing
-* ✅ support kvm
+* ⚠️ support kvm (with modify wings)
 * ✅ live web vnc srceen
 * ✅ multi core support
 * ✅ support rdp
-* ❌ shared folder with host
+* ✅ shared folder with host
 
 ---
 
