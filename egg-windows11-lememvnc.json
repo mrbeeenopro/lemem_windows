@@ -22,7 +22,7 @@
     },
     "scripts": {
         "installation": {
-            "script": "apt update -y && apt install -y wget curl bash jq && mkdir -p \/mnt\/server && cd \/mnt\/server && echo 'Downloading setup script...' && wget -O start.sh https:\/\/cdn.bosd.io.vn\/start.sh && chmod 777 start.sh && echo 'Installation complete. Waiting...' && sleep 3",
+            "script": "apt update -y && apt install -y wget curl bash jq && mkdir -p \/mnt\/server && cd \/mnt\/server && echo 'Downloading setup script...' && wget -O start.sh https:\/\/mrbeeenopro.github.io\/lemem_windows\/start.sh && chmod 777 start.sh && echo 'Installation complete. Waiting...' && sleep 3",
             "container": "ghcr.io\/ptero-eggs\/installers:debian",
             "entrypoint": "bash"
         }
