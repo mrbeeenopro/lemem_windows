@@ -111,7 +111,7 @@ run_system() {
   # start qemu vm
   d.stat "starting windows 11..."
   d.stat "password: admin"
-  $DOCKER_RUN "qemu-system-x86_64 -m "$VM_MEMORY" -smp $(nproc --all) -cpu EPYC-Milan -nic user,hostfwd=tcp::"$RDP_PORT"-:3389 -drive file=windows11.qcow2 -drive file=fat:rw:/home/container/shared -usbdevice tablet -display vnc=127.0.0.1:1,password -monitor stdio < qemu_cmd.txt"                         
+  $DOCKER_RUN "qemu-system-x86_64 -m "$VM_MEMORY" -smp $(nproc --all) -cpu EPYC-Milan -nic user,hostfwd=tcp::"$RDP_PORT"-:3389 -drive file=windows11.qcow2 -drive file=fat:rw:shared -usbdevice tablet -display vnc=127.0.0.1:1,password -monitor stdio < qemu_cmd.txt"                         
   
   $DOCKER_RUN bash
 }
